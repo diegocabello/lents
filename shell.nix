@@ -6,6 +6,6 @@ mkShell {
   ];
   shellHook = ''
     export PROMPT_COMMAND=""
-    alias compile="gcc src/main.c src/tree_from_yaml.c -lyaml -o gifts"
+    alias compile="gcc -I ./include src/main.c -o gifts -lyaml"
   '';
 }

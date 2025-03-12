@@ -1,0 +1,40 @@
+flowchart LR
+    A[file name] --> C(parser)
+    C --> D[json]
+    C --> E[yaml]
+
+    subgraph tree ["tree"]
+        N[nodes]
+    end
+
+    D & E --> tree
+
+
+    subgraph ITI ["Individual Tag Ipsodata"]
+        K[all ancestry uids]
+        L[all children uids]
+    end
+
+    subgraph ITM ["Individual Tag Metadata"]
+        H[hash]
+        I[uid]
+        J[character string]
+    end
+
+    subgraph data ["data"]
+        ITM
+        ITI
+    end
+
+    subgraph padding ["padding"]
+        header
+        midb[Meta/Ipsodata break]
+    end
+
+    N --> H & I & J
+    N --> K & L
+    data -->|repeat for each node| tree
+
+    ITI -->|Ipsodata grouped together| M[binary file]
+    ITM -->|Metadata grouped together| M
+    padding --> M
