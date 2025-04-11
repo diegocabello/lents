@@ -2,12 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>  // Add this for isspace()
 #include <yaml.h>
 #include "gents.h"
-
-// Import functions from nested_structure.c
-extern struct nested_node* create_nested_node(const char* name);
-extern int add_nested_child(struct nested_node* parent, struct nested_node* child);
 
 // Forward declarations of helper functions
 static struct nested_node* process_yaml_mapping(yaml_parser_t *parser, struct nested_node *parent, int current_depth);
@@ -36,8 +33,12 @@ struct nested_node* build_tree_from_yaml(const char* filename) {
     // Create a root node to hold all top-level categories
     struct nested_node* forest_root = create_nested_node("ROOT");
     
-    // Parse events
-    do {
+    // Parse events with safety counter
+    int event_count = 0;
+    int max_events = 1000; // Safety limit
+    int done = 0;
+    
+    while (!done && event_count < max_events) {
         if (!yaml_parser_parse(&parser, &event)) {
             fprintf(stderr, "Parser error: %d\n", parser.error);
             yaml_parser_delete(&parser);
@@ -45,18 +46,53 @@ struct nested_node* build_tree_from_yaml(const char* filename) {
             return NULL;
         }
         
-        // We're only interested in document start event to begin processing
-        if (event.type == YAML_DOCUMENT_START_EVENT) {
-            // Process the document as a mapping
-            struct nested_node* result = process_yaml_mapping(&parser, forest_root, 0);
-            if (!result) {
-                fprintf(stderr, "Warning: Error in YAML parsing, but continuing...\n");
+        event_count++;
+        printf("DEBUG: Event #%d, type: %d\n", event_count, event.type);
+        
+        if (event.type == YAML_NO_EVENT) {
+            fprintf(stderr, "Warning: Received YAML_NO_EVENT, stopping parser\n");
+            done = 1;
+        }
+        else if (event.type == YAML_STREAM_END_EVENT) {
+            printf("DEBUG: End of YAML stream\n");
+            done = 1;
+        }
+        else if (event.type == YAML_DOCUMENT_START_EVENT) {
+            printf("DEBUG: Found document start\n");
+            
+            // Process the document content - look for a mapping or sequence start
+            yaml_event_t content_event;
+            if (yaml_parser_parse(&parser, &content_event)) {
+                event_count++;
+                printf("DEBUG: Document content event type: %d\n", content_event.type);
+                
+                if (content_event.type == YAML_MAPPING_START_EVENT) {
+                    // Process mapping and its contents
+                    yaml_event_delete(&content_event);
+                    if (!process_yaml_mapping(&parser, forest_root, 0)) {
+                        fprintf(stderr, "Error processing mapping\n");
+                    }
+                }
+                else if (content_event.type == YAML_SEQUENCE_START_EVENT) {
+                    // Process sequence and its contents
+                    printf("DEBUG: Processing root sequence\n");
+                    yaml_event_delete(&content_event);
+                    process_yaml_sequence(&parser, forest_root);
+                    printf("DEBUG: Finished processing root sequence\n");
+                }
+                else {
+                    fprintf(stderr, "Unexpected document content type: %d\n", content_event.type);
+                    yaml_event_delete(&content_event);
+                }
             }
-            break;
         }
         
         yaml_event_delete(&event);
-    } while (event.type != YAML_STREAM_END_EVENT);
+    }
+    
+    if (event_count >= max_events) {
+        fprintf(stderr, "Warning: Reached maximum event count, parser might be in a loop\n");
+    }
     
     // Cleanup
     yaml_parser_delete(&parser);
@@ -153,9 +189,9 @@ static struct nested_node* process_yaml_mapping(yaml_parser_t *parser, struct ne
                     }
                     // If it's the end of the mapping, this key has no value (which is fine)
                     else if (next_event.type == YAML_MAPPING_END_EVENT) {
-                        // This is the end of the mapping, break out
+                        // Just delete the event and continue processing other keys
                         yaml_event_delete(&next_event);
-                        break;
+                        // Don't break here - we need to continue processing other keys
                     }
                     
                     yaml_event_delete(&next_event);
@@ -175,38 +211,48 @@ static struct nested_node* process_yaml_mapping(yaml_parser_t *parser, struct ne
 // Process a YAML sequence (list of items)
 static void process_yaml_sequence(yaml_parser_t *parser, struct nested_node *parent) {
     yaml_event_t event;
+    int item_count = 0;
+    int max_items = 1000; // Safety limit
     
-    while (1) {
+    while (item_count < max_items) {
         if (!yaml_parser_parse(parser, &event)) {
             fprintf(stderr, "Parser error in sequence\n");
             return;
         }
         
+        printf("DEBUG: Sequence event type: %d\n", event.type);
+        
         // End of the sequence
         if (event.type == YAML_SEQUENCE_END_EVENT) {
+            printf("DEBUG: End of sequence after %d items\n", item_count);
             yaml_event_delete(&event);
             break;
         }
         
         // Handle a scalar item (simple child category)
         if (event.type == YAML_SCALAR_EVENT) {
+            item_count++;
+            printf("DEBUG: Processing sequence item #%d: %s\n", item_count, (char *)event.data.scalar.value);
             struct nested_node *child = create_nested_node((char *)event.data.scalar.value);
             add_nested_child(parent, child);
         }
         // Handle a mapping item (child category with its own children)
         else if (event.type == YAML_MAPPING_START_EVENT) {
-            // Get the current depth from the parent
-            int current_depth = 0;
-            struct nested_node *temp = parent;
-            while (temp && temp->parent) {
-                current_depth++;
-                temp = temp->parent;
-            }
+            item_count++;
+            printf("DEBUG: Processing mapping in sequence, item #%d\n", item_count);
+            
+            // Create a temporary node to hold mapping data
+            struct nested_node *temp_node = create_nested_node("item");
+            add_nested_child(parent, temp_node);
             
             // Process the mapping with the correct depth
-            process_yaml_mapping(parser, parent, current_depth);
+            process_yaml_mapping(parser, temp_node, 1);
         }
         
         yaml_event_delete(&event);
+    }
+    
+    if (item_count >= max_items) {
+        fprintf(stderr, "Warning: Reached maximum number of items in sequence\n");
     }
 }
