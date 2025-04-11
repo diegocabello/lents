@@ -21,10 +21,6 @@
 #define MAX_NAME_CHAR 44
 #define HASH_BYTE_LENGTH 7
 
-//!!THESE ALL HAVE TO BE TERMINATED WITH NULL ELSE THE PROGRAM WILL HAVE PROBLEMS!!
-char *REMOVE_ALIASES[] ={"remove", "rm", NULL}
-char *ADD_ALIASES[] = {"add", NULL}
-
 /*
  * Data structures for serialization
  */
@@ -60,18 +56,7 @@ struct nested_node {
     uint32_t uid;
 };
 
-/*
- * Node manipulation functions
- */
 
-bool is_command_alias(const char *operation, const char *commands[]) {
-    for (int i = 0; commands[i] != NULL; i++) {
-        if (strcmp(operation, commands[i]) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
 /* Create a new node with the given name */
 static inline struct nested_node* create_nested_node(const char* name) {
     struct nested_node* new_node = (struct nested_node*)malloc(sizeof(struct nested_node));
@@ -135,15 +120,17 @@ static inline void free_nested_tree(struct nested_node *root) {
     free(root);
 }
 
+int is_command_alias(const char *operation, const char *commands[]);
+
 /*
  * File tagging functions
  */
 
 /* Generate a random identifier for a file */
-char* generate_random_id();
+//char* generate_random_id();
 
 /* Add a unique identifier tag to a file if it doesn't have one already */
-int add_tag(const char *filename, const char *attr_name);
+// int add_tag(const char *filename, const char *attr_name);
 
 /*
  * Forward declarations for parsers and serializers

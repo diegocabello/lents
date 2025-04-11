@@ -6,41 +6,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-// Generate a random ID using /dev/urandom and convert to hex
-char* generate_random_id() {
-    FILE *f = fopen("/dev/urandom", "rb");
-    if (f == NULL) {
-        perror("Failed to open /dev/urandom");
-        return NULL;
-    }
-    
-    // Read 7 random bytes
-    unsigned char bytes[7];
-    size_t read_bytes = fread(bytes, 1, 7, f);
-    fclose(f);
-    
-    if (read_bytes != 7) {
-        fprintf(stderr, "Failed to read enough random bytes\n");
-        return NULL;
-    }
-    
-    // Convert to hex string (each byte becomes 2 hex chars, plus null terminator)
-    char* hex_id = malloc(15);  // 7 bytes * 2 chars per byte + null terminator
-    if (hex_id == NULL) {
-        return NULL;
-    }
-    
-    for (int i = 0; i < 7; i++) {
-        sprintf(hex_id + (i * 2), "%02x", bytes[i]);
-    }
-    hex_id[14] = '\0';
-    
-    return hex_id;
-}
+//!!THESE ALL HAVE TO BE TERMINATED WITH NULL ELSE THE PROGRAM WILL HAVE PROBLEMS!!
+const char *REMOVE_ALIASES[] ={"remove", "rm", NULL};
+const char *ADD_ALIASES[] = {"add", NULL};
 
 // Add a tag to a file if it doesn't already have one
 // Returns 1 on success, 0 on failure
-int handle_tag(const char *filename, const char *attr_name, const char *operation) {
+int file_to_tags(const char *filename, const char *attr_name, const char *operation) {
     char attr_value[256] = {0};
     
     // Check if file exists
@@ -71,12 +43,12 @@ int handle_tag(const char *filename, const char *attr_name, const char *operatio
         return 1;
     }
 
-    if (is_command_alias(operation, ADD_ALIASES[])) {
+    if (is_alias(operation, ADD_ALIASES)) {
         // add functionality
-    } else if (is_command_alias(operation, REMOVE_ALIASES[])) {
+    } else if (is_alias(operation, REMOVE_ALIASES)) {
         // remove functionality
     } else {
-        fprintf(stderr, "Unknown operation %s for command tag\n", *operation)
-        return 1
+        fprintf(stderr, "Unknown operation %s for command tag\n", operation);
+        return 1;
     }
 }
