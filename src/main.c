@@ -9,8 +9,8 @@ struct node* create_node(const char* name);
 void free_tree(struct node* root);
 
 // MUST BE NULL TERMINATED
-const char *TAG_TO_FILES_ALIASES = {"tagtofiles", "ttf", NULL}
-const char *FILE_TO_TAGS_ALIASES = {"filetotags", "ftt", NULL}
+const char *TAG_TO_FILES_ALIASES[] = {"tagtofiles", "ttf", NULL};
+const char *FILE_TO_TAGS_ALIASES[] = {"filetotags", "ftt", NULL};
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    const char* command = argv[1]
+    const char* command = argv[1];
 
     if (strcmp(command, "parse") == 0) {
         const char* input_file = argv[2];
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     } else if (is_alias(command, TAG_TO_FILES_ALIASES)) {
         // functionality
-    } else if (strcmp(command, "filter")) {
+    } else if (strcmp(command, "filter") == 0) {
         // functionality
     } else {
         fprintf(stderr, "Unknown command: %s\n", argv[1]);
