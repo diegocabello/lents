@@ -40,7 +40,7 @@ char* generate_random_id() {
 
 // Add a tag to a file if it doesn't already have one
 // Returns 1 on success, 0 on failure
-int add_tag(const char *filename, const char *attr_name) {
+int handle_tag(const char *filename, const char *attr_name, const char *operation) {
     char attr_value[256] = {0};
     
     // Check if file exists
@@ -52,11 +52,7 @@ int add_tag(const char *filename, const char *attr_name) {
     // Check if the extended attribute already exists
     ssize_t attr_size = getxattr(filename, attr_name, attr_value, sizeof(attr_value) - 1);
     
-    if (attr_size > 0) {
-        // Attribute exists, file is already tagged
-        printf("File already has ID: %s\n", attr_value);
-        return 1;
-    } else {
+    if (attr_size == 0) {
         // Attribute doesn't exist, generate and add it
         char *random_id = generate_random_id();
         if (random_id == NULL) {
@@ -73,5 +69,14 @@ int add_tag(const char *filename, const char *attr_name) {
         printf("Added ID %s to file %s\n", random_id, filename);
         free(random_id);
         return 1;
+    }
+
+    if (is_command_alias(operation, ADD_ALIASES[])) {
+        // add functionality
+    } else if (is_command_alias(operation, REMOVE_ALIASES[])) {
+        // remove functionality
+    } else {
+        fprintf(stderr, "Unknown operation %s for command tag\n", *operation)
+        return 1
     }
 }

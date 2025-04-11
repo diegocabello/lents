@@ -21,6 +21,10 @@
 #define MAX_NAME_CHAR 44
 #define HASH_BYTE_LENGTH 7
 
+//!!THESE ALL HAVE TO BE TERMINATED WITH NULL ELSE THE PROGRAM WILL HAVE PROBLEMS!!
+char *REMOVE_ALIASES[] ={"remove", "rm", NULL}
+char *ADD_ALIASES[] = {"add", NULL}
+
 /*
  * Data structures for serialization
  */
@@ -60,6 +64,14 @@ struct nested_node {
  * Node manipulation functions
  */
 
+bool is_command_alias(const char *operation, const char *commands[]) {
+    for (int i = 0; commands[i] != NULL; i++) {
+        if (strcmp(operation, commands[i]) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
 /* Create a new node with the given name */
 static inline struct nested_node* create_nested_node(const char* name) {
     struct nested_node* new_node = (struct nested_node*)malloc(sizeof(struct nested_node));
