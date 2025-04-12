@@ -4,6 +4,7 @@
 #include "gents.h"
 
 extern int serialize(const char* input_filename, const char* output_filename);
+extern int file_to_tags(const char *filename, const char *operation, const char **tags, int tag_count);
 
 struct node* create_node(const char* name);
 void free_tree(struct node* root);
@@ -36,14 +37,26 @@ int main(int argc, char *argv[]) {
         }
         
     } else if (is_alias(command, FILE_TO_TAGS_ALIASES)) {
+        if (argc < 4) { fprintf(stderr, "Usage: %s filetotags <filename> <operation> [tag1] [tag2] ...\n", argv[0]); return 1; }
         
         const char* filename = argv[2];
-        const char* operation = argv[3]; // add or remove
-        const char* attr_name = "user.lents_id";  
+        const char* operation = argv[3]; // add, remove, show
         
-        int result = file_to_tags(filename, attr_name, operation);
-        return result ? 0 : 1;  
-
+        const char** tags = NULL;
+        int tag_count = 0;
+        
+        if (argc > 4) {
+            tag_count = argc - 4;
+            tags = (const char**)malloc(tag_count * sizeof(const char*));
+            if (tags == NULL) { fprintf(stderr, "Memory allocation error\n"); return 1; }
+            
+            for (int i = 0; i < tag_count; i++) { tags[i] = argv[i + 4]; }
+        }
+        
+        int result = file_to_tags(filename, operation, tags, tag_count);
+        free(tags);
+        return result ? 0 : 1;
+            
     } else if (is_alias(command, TAG_TO_FILES_ALIASES)) {
         // functionality
     } else if (strcmp(command, "filter") == 0) {

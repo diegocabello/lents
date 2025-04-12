@@ -21,6 +21,11 @@
 #define MAX_NAME_CHAR 44
 #define HASH_BYTE_LENGTH 7
 
+#define FILE_TAGS_STRUCTURE_MARKER_SIZE 32 // it's gotta be this way
+extern const unsigned char FILE_TAGS_STRUCTURE_MARKER[FILE_TAGS_STRUCTURE_MARKER_SIZE];
+
+
+
 /*
  * Data structures for serialization
  */
@@ -120,21 +125,12 @@ static inline void free_nested_tree(struct nested_node *root) {
     free(root);
 }
 
-int is_command_alias(const char *operation, const char *commands[]);
 
-/*
- * File tagging functions
- */
-
-/* Generate a random identifier for a file */
-//char* generate_random_id();
-
-/* Add a unique identifier tag to a file if it doesn't have one already */
-// int add_tag(const char *filename, const char *attr_name);
-
-/*
- * Forward declarations for parsers and serializers
- */
 struct nested_node* build_tree_from_yaml(const char* filename);
 
-#endif /* GENTS_H */
+typedef struct {
+    unsigned char* data;
+    size_t size;
+} MarkerData;
+
+#endif 
