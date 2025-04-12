@@ -1,12 +1,20 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "gents.h"
+//#include "gents.h"
+
+#define HASH_BYTE_LENGTH 7
+#define MAGIC_NUMBER "GENTS"
+#define VERSION_NUMBER 1
+#define MAX_FOREST_SIZE 23
+#define MAX_CHILDREN 15
+#define MAX_NAME_CHAR 44
+#define MAX_DEPTH 8
 
 unsigned char* serialize_header() {
     unsigned char* buffer = (unsigned char*)malloc(32); // Total size 32 bytes
     if (!buffer) return NULL;
-    
     int offset = 0;
     
     // Write magic number (5 bytes)
@@ -27,12 +35,3 @@ unsigned char* serialize_header() {
 }
 
 
-unsigned char* serialize_delimiter() {
-    unsigned char* buffer = (unsigned char*)malloc(32); // Total size 32 bytes
-    if (!buffer) return NULL;
-    
-    // Fill the entire buffer with the value 0x44 (binary 01000100)
-    memset(buffer, 0x90, 32);
-    
-    return buffer;
-}

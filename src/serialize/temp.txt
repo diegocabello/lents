@@ -1,0 +1,6 @@
+#define MAGIC_NUMBER "GENTS"
+#define VERSION_NUMBER 1
+
+/* Size limits */
+#define MAX_FOREST_SIZE 23
+#define MAX_CHILDREN 15
