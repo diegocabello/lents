@@ -1,6 +1,7 @@
 #include <stdio.h>   // For fprintf, printf, stderr
 #include <stdlib.h>  // For malloc, free
 #include <string.h>  // For strncpy
+#include "gents.h"
 
 inline struct nested_node* create_nested_node(const char* name) {
     struct nested_node* new_node = (struct nested_node*)malloc(sizeof(struct nested_node));
