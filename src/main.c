@@ -17,7 +17,7 @@ const char *PROCESS_ALIASES[] = {"process", "parse", NULL};
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: %s parse <input_file> [output_file]\n", argv[0]);
+        fprintf(stderr, "Usage: %s parse <input_file>\n", argv[0]);
         return 1;
     }
     
@@ -26,8 +26,8 @@ int main(int argc, char *argv[]) {
     if (is_alias(command, PROCESS_ALIASES)) {
         const char* input_file = argv[2];
         
-        if (serialize(input_file, ".ments")) {
-            printf("Data file serialized successfully to %s\n", output_file);
+        if (serialize(input_file, ".lents")) {
+            printf("Data file serialized successfully to ./.lents");
         } else {
             fprintf(stderr, "Failed to serialize data file\n");
             return 1;

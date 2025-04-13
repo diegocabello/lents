@@ -14,7 +14,6 @@ extern MarkerData load_ft_structure(const char* filename, const unsigned char* m
 
 // Add a tag to a file if it doesn't already have one
 // Returns 1 on success, 0 on failure
-//int file_to_tags(const char *filename, const char *attr_name, const char *operation, const char[] *tags) {
 int file_to_tags(const char *filename, const char *operation, const char **tags, int tag_count) {
     
     char *file_uid = check_file_exists_and_tagged(filename);

@@ -22,7 +22,7 @@ static inline void free_nested_tree(struct nested_node *root) {
     free(root);
 }
 
-static char* generate_hash(const char* name, char* hash_output) {
+static unsigned char* generate_hash(const char* name, char* hash_output) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     
     char padded_name[MAX_NAME_CHAR+1];
