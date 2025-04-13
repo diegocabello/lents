@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <getopt.h>
 #include "gents.h"
 
 extern int serialize(const char* input_filename, const char* output_filename);
@@ -12,6 +13,7 @@ void free_tree(struct node* root);
 // MUST BE NULL TERMINATED
 const char *TAG_TO_FILES_ALIASES[] = {"tagtofiles", "ttf", NULL};
 const char *FILE_TO_TAGS_ALIASES[] = {"filetotags", "ftt", NULL};
+const char *PROCESS_ALIASES[] = {"process", "parse", NULL};
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
@@ -21,15 +23,10 @@ int main(int argc, char *argv[]) {
     
     const char* command = argv[1];
 
-    if (strcmp(command, "parse") == 0) {
+    if (is_alias(command, PROCESS_ALIASES)) {
         const char* input_file = argv[2];
-        const char* output_file = "lents.nts"; // Default output filename
         
-        if (argc > 3) {
-            output_file = argv[3];
-        }
-        
-        if (serialize(input_file, output_file)) {
+        if (serialize(input_file, ".ments")) {
             printf("Data file serialized successfully to %s\n", output_file);
         } else {
             fprintf(stderr, "Failed to serialize data file\n");

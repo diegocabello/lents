@@ -8,31 +8,28 @@
 #include <openssl/sha.h>
 #include "gents.h"
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
 extern unsigned char* serialize_header();
 extern struct nested_node* build_tree_from_yaml(const char* filename);
 
-// Function prototype for resolve_symlink
-int resolve_symlink(const char* path, char* resolved_path, size_t resolved_size);
+static inline void free_nested_tree(struct nested_node *root) {
+    if (root == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < root->child_count; i++) {
+        free_nested_tree(root->children[i]);
+    }
+    free(root);
+}
 
 static void generate_hash(const char* name, char* hash_output) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     
-    char padded_name[MAX_NAME_CHAR];
-    memset(padded_name, 0, MAX_NAME_CHAR);
-    strncpy(padded_name, name, MAX_NAME_CHAR-1);
+    char padded_name[MAX_NAME_CHAR+1];
+    memset(padded_name, 0, MAX_NAME_CHAR+1);
+    strncpy(padded_name, name, MAX_NAME_CHAR);
     
-    SHA256((unsigned char*)padded_name, MAX_NAME_CHAR, hash);
-    
-    memcpy(hash_output, hash, HASH_BYTE_LENGTH);
-}
-
-static uint32_t generate_uid() {
-    static uint32_t next_uid = 1;
-    return next_uid++;
+    return SHA256((unsigned char*)padded_name, MAX_NAME_CHAR, hash);   
 }
 
 static void collect_ancestry_uids(struct nested_node* node, uint32_t* ancestry_uids) {
@@ -56,10 +53,9 @@ static int serialize_node(FILE* file, struct nested_node* node) {
     struct serialized_node serialized;
     
     generate_hash(node->name, serialized.hash);
-    
-    uint32_t node_uid = generate_uid();
-    node->uid = node_uid;
-    serialized.uid = node_uid;
+
+    memcpy(&node->uid, serialized.hash, sizeof(uint32_t));
+    serialized.uid = node->uid;
     
     strncpy(serialized.name, node->name, MAX_NAME_CHAR-1);
     serialized.name[MAX_NAME_CHAR-1] = '\0';
@@ -102,15 +98,9 @@ int serialize_tree(FILE* file, struct nested_node* node) {
 int serialize(const char* input_filename, const char* output_filename) {
     if (!input_filename || !output_filename) return 0;
     
-    char resolved_path[PATH_MAX];
     const char* actual_path = input_filename;
-    
-    if (resolve_symlink(input_filename, resolved_path, sizeof(resolved_path))) {
-        printf("Input file is a symbolic link pointing to: %s\n", resolved_path);
-        actual_path = resolved_path;
-    }
-    
     const char* extension = strrchr(actual_path, '.');
+
     if (!extension || extension == actual_path) {
         fprintf(stderr, "Error: Input file has no extension\n");
         return 0;
@@ -123,15 +113,9 @@ int serialize(const char* input_filename, const char* output_filename) {
     if (strcasecmp(extension, "yaml") == 0 || strcasecmp(extension, "yml") == 0) {
         root = build_tree_from_yaml(actual_path);
         printf("\nFull tree structure:\n");
-        print_nested_tree(root, 0);
         printf("\n");
     } else {
         fprintf(stderr, "Error: Unsupported file format: %s\n", extension);
-        return 0;
-    }
-    
-    if (!root) {
-        fprintf(stderr, "Error: Failed to build tree from input file\n");
         return 0;
     }
     
@@ -143,6 +127,7 @@ int serialize(const char* input_filename, const char* output_filename) {
     }
     
     unsigned char* header = serialize_header();
+
     if (!header) {
         fprintf(stderr, "Error: Failed to serialize header\n");
         fclose(file);

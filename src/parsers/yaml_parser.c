@@ -8,6 +8,9 @@
 static struct nested_node* process_yaml_mapping(yaml_parser_t *parser, struct nested_node *parent, int current_depth);
 static void process_yaml_sequence(yaml_parser_t *parser, struct nested_node *parent);
 
+extern static inline struct nested_node* create_nested_node(const char* name);
+extern static inline int add_nested_child(struct nested_node* parent, struct nested_node* child);
+
 struct nested_node* build_tree_from_yaml(const char* filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -87,9 +90,6 @@ struct nested_node* build_tree_from_yaml(const char* filename) {
     
     yaml_parser_delete(&parser);
     fclose(file);
-    
-    printf("Parsed YAML tree:\n");
-    print_nested_tree(forest_root, 0);
     
     return forest_root;
 }
